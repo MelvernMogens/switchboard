@@ -54,3 +54,6 @@ Default: strongest model + high effort.
 ## House rules
 - Run `swift test` before and after a change, and report the real numbers.
 - A diff that contradicts a sentence in a doc means that doc sentence is part of the diff.
+
+## Menu-bar icon
+Custom template glyph in `Sources/Switchboard/StatusIcon.swift`: a solid rounded tile with a vertical switch slot, knob up. Melvern approved it. Don't swap it for an SF Symbol: `switch.2` looks like Control Center, and he rejected `switch.programmable`.

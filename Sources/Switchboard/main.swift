@@ -13,9 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             model = BoardModel()
             statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
             if let button = statusItem.button {
-                let img = NSImage(systemSymbolName: "switch.2", accessibilityDescription: "Switchboard")
-                img?.isTemplate = true
-                button.image = img
+                button.image = StatusIcon.make()
                 button.action = #selector(togglePopover)
                 button.target = self
             }
