@@ -10,7 +10,7 @@ terminal. Switchboard puts them all in a single popover.
 
 | Switches (toggle) | Actions (one-shot) | Devices |
 |---|---|---|
-| Dark Mode · Keep Awake (with timer: 15m–5h) · Night Shift · Mute · Hide Desktop Icons · Auto-hide Dock · Show Hidden Files | Start Screen Saver · Sleep Display · Lock Screen · **Eject Disks** · Empty Trash (asks first) | Every paired Bluetooth audio device (AirPods, headphones): connect / disconnect |
+| Dark Mode · Keep Awake (Indefinitely or 15m–5h; shows the mode / live countdown under the title, toggle reuses your last pick) · Night Shift · Mute · Hide Desktop Icons · Auto-hide Dock · Show Hidden Files | Start Screen Saver · Sleep Display · Lock Screen · **Eject Disks** · Empty Trash (asks first) | Every paired Bluetooth audio device (AirPods, headphones): connect / disconnect |
 
 Settings: drag to reorder, untick to hide, launch at login.
 
@@ -46,6 +46,7 @@ scripts/build-app.sh --install
 | `.build/debug/Switchboard --probe` | list switches + live state |
 | `.build/debug/Switchboard --set nightShift on` | flip a switch from the terminal / Shortcuts |
 | `.build/debug/Switchboard --run ejectDisks` | run an action |
+| `.build/debug/Switchboard --snapshot out.png [secs]` | render the panel (Keep Awake on) to a PNG |
 | `scripts/build-app.sh --install` | build + install to /Applications |
 
 ## Roadmap

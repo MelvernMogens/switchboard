@@ -84,21 +84,62 @@ final class ShellSwitchTests: XCTestCase {
 }
 
 final class KeepAwakeTests: XCTestCase {
+    private func store() -> UserDefaults {
+        let name = "switchboard.tests.\(UUID().uuidString)"
+        let d = UserDefaults(suiteName: name)!
+        d.removePersistentDomain(forName: name)
+        return d
+    }
+
     func testAssertionLifecycle() throws {
-        let k = KeepAwakeSwitch()
+        let k = KeepAwakeSwitch(store: store())
         XCTAssertFalse(k.readState())
         try k.start(for: 3600)
         XCTAssertTrue(k.readState())
-        XCTAssertEqual(k.detail, "1h 0m")
+        XCTAssertEqual(k.detail, "1h 0m left")
+        XCTAssertNotNil(k.endsAt)
         k.stop()
         XCTAssertFalse(k.readState())
         XCTAssertNil(k.detail)
+        XCTAssertNil(k.endsAt)
+    }
+
+    func testIndefiniteShowsMode() throws {
+        let k = KeepAwakeSwitch(store: store())
+        try k.start(for: nil)
+        XCTAssertEqual(k.detail, "Indefinitely")
+        XCTAssertNil(k.endsAt)
+        k.stop()
+    }
+
+    func testToggleRemembersChosenMode() throws {
+        let s = store()
+        let k = KeepAwakeSwitch(store: s)
+        XCTAssertNil(k.mode)                       // default: indefinitely
+        try k.start(for: 1800)
+        k.stop()
+        try k.setState(true)                       // plain toggle reuses 30 min
+        XCTAssertEqual(k.status(at: Date()), "30m left")
+        k.stop()
+        XCTAssertEqual(KeepAwakeSwitch(store: s).mode, 1800)   // survives relaunch
+        try k.start(for: nil)
+        XCTAssertNil(k.mode)
+        k.stop()
+    }
+
+    func testCountdownAdvances() throws {
+        let k = KeepAwakeSwitch(store: store())
+        try k.start(for: 900)
+        XCTAssertEqual(k.status(at: Date().addingTimeInterval(600)), "5m left")
+        XCTAssertEqual(k.status(at: Date().addingTimeInterval(870)), "30s left")
+        k.stop()
     }
 
     func testFormat() {
         XCTAssertEqual(KeepAwakeSwitch.format(remaining: 899), "15m")
         XCTAssertEqual(KeepAwakeSwitch.format(remaining: 5400), "1h 30m")
-        XCTAssertEqual(KeepAwakeSwitch.format(remaining: -5), "0m")
+        XCTAssertEqual(KeepAwakeSwitch.format(remaining: 45), "45s")
+        XCTAssertEqual(KeepAwakeSwitch.format(remaining: -5), "0s")
     }
 }
 

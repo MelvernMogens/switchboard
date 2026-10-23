@@ -15,7 +15,7 @@ Eject Disks, Empty Trash). For Melvern's own Mac; not distributed.
 
 ## Commands
 ```bash
-swift test                          # 19 unit tests (SwitchKit)
+swift test                          # 22 unit tests (SwitchKit)
 swift build                         # debug build
 .build/debug/Switchboard --probe    # print every switch + live state, no UI
 .build/debug/Switchboard --set <id> on|off   # e.g. --set nightShift on
@@ -54,6 +54,11 @@ Default: strongest model + high effort.
 ## House rules
 - Run `swift test` before and after a change, and report the real numbers.
 - A diff that contradicts a sentence in a doc means that doc sentence is part of the diff.
+
+## Keep Awake (One Switch style)
+- Subtitle under the title while on: "Indefinitely" or a live "1h 29m left" (TimelineView, 1s tick).
+- The timer menu checkmarks the chosen mode; the plain toggle turns on with the last chosen mode (`keepAwakeMode` in defaults, 0 = indefinitely).
+- To check the UI, use `--snapshot`, not menu-bar clicking: the menu bar auto-hides behind fullscreen apps and blind clicks land in other apps. ImageRenderer draws AppKit controls (Toggle/Menu) as yellow placeholders. That's expected.
 
 ## Menu-bar icon
 Custom template glyph in `Sources/Switchboard/StatusIcon.swift`: a solid rounded tile with a vertical switch slot, knob up. Melvern approved it. Don't swap it for an SF Symbol: `switch.2` looks like Control Center, and he rejected `switch.programmable`.

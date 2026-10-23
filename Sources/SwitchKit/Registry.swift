@@ -11,7 +11,7 @@ public final class SwitchRegistry: @unchecked Sendable {
 
     public init(runner: CommandRunner = ProcessRunner(), store: UserDefaults = .standard) {
         self.store = store
-        keepAwake = KeepAwakeSwitch()
+        keepAwake = KeepAwakeSwitch(store: store)
         builtIns = [
             DarkModeSwitch(runner: runner),
             keepAwake,

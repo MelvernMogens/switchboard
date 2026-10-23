@@ -87,6 +87,32 @@ if let i = CommandLine.arguments.firstIndex(where: { $0 == "--set" || $0 == "--r
     }
 }
 
+// `Switchboard --snapshot out.png [seconds]`: renders the panel with Keep Awake on
+// (0 / omitted = indefinitely) to a PNG, for checking the UI without clicking the menu bar.
+if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), CommandLine.arguments.count > i + 1 {
+    MainActor.assumeIsolated {
+        let args = CommandLine.arguments
+        let secs = args.count > i + 2 ? TimeInterval(args[i + 2]) ?? 0 : 0
+        let store = UserDefaults(suiteName: "switchboard.snapshot")!
+        let model = BoardModel(registry: SwitchRegistry(store: store))
+        try? model.registry.keepAwake.start(for: secs > 0 ? secs : nil)
+        model.rows = model.registry.all(bluetooth: []).map {
+            .init(item: $0, on: $0.style == .toggle ? $0.readState() : false, detail: $0.detail, title: $0.displayTitle)
+        }
+        let view = PanelView(model: model, openSettings: {})
+            .padding(.vertical, 4).background(Color(white: 0.16)).environment(\.colorScheme, .dark)
+        let r = ImageRenderer(content: view)
+        r.scale = 2
+        if let img = r.nsImage, let tiff = img.tiffRepresentation,
+           let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+            try? png.write(to: URL(fileURLWithPath: args[i + 1]))
+        }
+        model.registry.keepAwake.stop()
+        store.removePersistentDomain(forName: "switchboard.snapshot")
+    }
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate

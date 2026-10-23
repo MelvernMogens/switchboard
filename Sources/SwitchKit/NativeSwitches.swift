@@ -12,10 +12,14 @@ public final class KeepAwakeSwitch: SwitchItem, @unchecked Sendable {
     private var expiry: Date?
     private var timer: Timer?
     private let lock = NSLock()
+    private let store: UserDefaults
     /// Called when a timed session runs out, so the UI can refresh.
     public var onExpire: (() -> Void)?
 
-    public init() {
+    static let modeKey = "keepAwakeMode"   // seconds; 0 = indefinitely
+
+    public init(store: UserDefaults = .standard) {
+        self.store = store
         super.init(id: "keepAwake", title: "Keep Awake", symbol: "cup.and.saucer", style: .toggle)
     }
 
@@ -24,14 +28,35 @@ public final class KeepAwakeSwitch: SwitchItem, @unchecked Sendable {
         ("1 hour", 3600), ("2 hours", 7200), ("5 hours", 18000),
     ]
 
-    public override var detail: String? {
+    /// The mode the user last picked; the plain toggle turns on with this.
+    public var mode: TimeInterval? {
+        get {
+            let v = store.double(forKey: Self.modeKey)
+            return v > 0 ? v : nil
+        }
+        set { store.set(newValue ?? 0, forKey: Self.modeKey) }
+    }
+
+    /// When the current timed session ends. nil = off or indefinitely.
+    public var endsAt: Date? {
         lock.lock(); defer { lock.unlock() }
-        guard assertion != 0, let expiry else { return nil }
-        return Self.format(remaining: expiry.timeIntervalSinceNow)
+        return assertion != 0 ? expiry : nil
+    }
+
+    /// Subtitle while on: "Indefinitely" or "1h 29m left". nil when off.
+    public override var detail: String? { status(at: Date()) }
+
+    public func status(at now: Date) -> String? {
+        lock.lock(); defer { lock.unlock() }
+        guard assertion != 0 else { return nil }
+        guard let expiry else { return "Indefinitely" }
+        return Self.format(remaining: expiry.timeIntervalSince(now)) + " left"
     }
 
     static func format(remaining: TimeInterval) -> String {
-        let mins = max(0, Int((remaining / 60).rounded(.up)))
+        let secs = max(0, Int(remaining.rounded(.up)))
+        if secs < 60 { return "\(secs)s" }
+        let mins = Int((Double(secs) / 60).rounded(.up))
         return mins >= 60 ? "\(mins / 60)h \(mins % 60)m" : "\(mins)m"
     }
 
@@ -41,11 +66,12 @@ public final class KeepAwakeSwitch: SwitchItem, @unchecked Sendable {
     }
 
     public override func setState(_ on: Bool) throws {
-        if on { try start(for: nil) } else { stop() }
+        if on { try start(for: mode) } else { stop() }
     }
 
     public func start(for duration: TimeInterval?) throws {
         stop()
+        mode = duration
         var id: IOPMAssertionID = 0
         let r = IOPMAssertionCreateWithName(
             kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
